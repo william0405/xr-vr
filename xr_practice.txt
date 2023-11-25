@@ -1,0 +1,52 @@
+1.unity xr interaction toolkit
+
+(1)開專案
+(2)裝xr interaction toolkit
+(3)project setting 安裝xr plugin
+(4)open XR打勾  fix all
+    
+(5)進edit -->interacion profiles 加入你的裝置(htc 那個)
+
+(6)package manager xr互動工具包 匯入starter assets
+
+(6)創建xr origin 最下面的
+(7)珊掉原本的camera
+
+(8)starter asset匯入， 裡面可以選預設的左右手控制器 加入
+
+(9)project setting 的 preset manager 會看到加入的控制器 輸入對應的Right Left
+
+(10)放幾個物件 開始體驗。
+
+
+2.雙手控制器設定，撿取物品
+
+(1)unity物件上左右手控制器都切換對應預設的控制器
+(2) 創建圓形 調大小都是0.1，做成prefab，拖到左右手控制器的model prefab上(匯入package，可以改用做好的手部的模型)
+(3)把animation hand controller加到prefab的手上，grip input要放xri 左手select、trigger input 放xri左手 active。(加完就可以控制虛擬手部的動作)
+(4)左右手控制器移除掉xr controller c#以外的。
+(5)左右手prefab加到左右手控制器的子物件裡，{只要做這個!!!在左右手控制器上加上sphere controller(radius設0.08)}
+(6)左右手控制器都加入xr direct interactor
+(7)互動layer mask裡的layer(改interactable)並把 layer選這個就好。
+(8)在互動物件上(ex:cube)加上xr grab interactable ，碰撞偵測改連續動態、互動layer mask也改interactable。
+
+
+
+3.VR 空間移動，原地旋轉、瞬間移動
+
+(1)xr origin點按右鍵 create xr locomotion system ，將xr origin拖入 
+(2)左手控制器點按右鍵加入xr ray interactor
+(3)直接創建xr teleport area，將material改成自己的平面floor prefab 、調整位置。
+(4)interact layer mask新增Teleport layer，將傳送區域和左手的ray的 互動層選擇teleport，左手ray下面三個不要勾，下面可調顏色 綠紅黃
+(5)左手ray use reference(用最上面兩) 選左手的locomotion/teleport。
+就可以傳送了移動了!!!
+(6)locomotion system裡的最下面右手打勾 加入xr 右手locomotion/turn
+
+另一個傳送方式
+(7)teleport 錨點 一樣用floor prefab拖到material上，要更改裡面的傳送辨識的match orientation 改成target up and forward ，互動層設interactable
+(8)外面拉teleportion controller cs進來， 加入倒左手controller上 兩個都打勾 下面傳送互動選ray interactor 上面的reference選左手locomotion telepoprt mode active，中間的選teleportm mode cancel。
+可以先關掉ray interactor ，在play mode時 按下按鍵 射線就會出現!
+
+(9)創建一個cylinder 調整大小變成圓盤，調整成紅色、collider移除，用成prefab
+(10)在ray interactor裡的下面的reticle加入prefab， 上面的raycast type改成 projectile curve 、velocity:8、下面綠色可以調alpha
+就做出引導線加上圓盤了!!!
