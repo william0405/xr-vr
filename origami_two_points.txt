@@ -1,0 +1,150 @@
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
+using static UnityEditorInternal.ReorderableList;
+
+public class fold_test : MonoBehaviour
+{
+    public GameObject prefab; 
+    private Vector3[] orginVertexs;
+    private float value = 0f;
+    private Vector3[] linePoints = new Vector3[2];
+    int ans;
+    private Camera mainCamera;
+    public LineRenderer line;
+
+    List <GameObject> savePrefab;
+
+    public void Start()
+    {
+        mainCamera = Camera.main;
+        ans = 0;
+        savePrefab = new List <GameObject>();
+
+        line = GetComponent<LineRenderer>();
+        line.positionCount = 2;
+        line.startWidth = 0.1f;
+        line.endWidth = 0.1f;
+        line.material = new Material(Shader.Find("Sprites/Default"));
+        line.startColor = Color.red;
+        line.endColor = Color.red;
+        line.enabled = false;
+        orginVertexs = GetComponent<MeshFilter>().mesh.vertices;
+    }
+
+    public void Update()
+    {
+     
+        if (Input.GetMouseButtonDown(0))
+        {
+
+            Ray ray = mainCamera.ScreenPointToRay(Input.mousePosition);
+
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                 
+                Vector3 mouse = hit.point;
+                if (ans < 2)
+                {
+                    GameObject newPrefab = Instantiate(prefab, mouse, Quaternion.identity);
+                    savePrefab.Add(newPrefab);
+                    linePoints[ans] = new Vector3(hit.point.x, hit.point.y, transform.position.z);
+                    line.SetPosition(0, linePoints[0]);
+                    line.SetPosition(1, linePoints[1]);
+                    line.enabled = true;
+                    ans++;
+                }
+               
+            }
+            
+            Debug.Log(linePoints[0]);
+            Debug.Log(linePoints[1]);
+            Debug.Log(ans);
+            
+
+        }
+        if (Input.GetMouseButtonDown(1))
+        {
+            linePoints[0] = Vector3.zero;
+            linePoints[1] = Vector3.zero;
+            ans = 0;
+
+
+            foreach (var i in savePrefab)
+            {
+                Destroy(i);
+            }
+            savePrefab.Clear();
+            Debug.Log(linePoints[0]);
+            Debug.Log(linePoints[1]);
+            Debug.Log(ans);
+            line.enabled = false;
+        }
+        if (Input.GetKey(KeyCode.RightArrow))
+        {
+            value += 1;
+            UpdateMesh(value);
+        }
+        else if (Input.GetKey(KeyCode.LeftArrow))
+        {
+            value -= 1;
+            UpdateMesh(value);
+        }
+        Debug.Log(value);
+
+    }
+
+    public void UpdateMesh(float angle)
+    {
+
+        Mesh mesh = GetComponent<MeshFilter>().mesh;
+
+        Vector3[] newVertexs = new Vector3[orginVertexs.Length];
+        Vector3 lstart = linePoints[0];
+        Vector3 lend = linePoints[1];
+        Vector3 offset = Point2LineVec(Vector3.zero, lstart, lend);
+        Vector3 axis = (lend - lstart).normalized;
+
+        for (int i = 0; i < orginVertexs.Length; i++)
+        {
+            Vector3 worldPoint = transform.TransformPoint(orginVertexs[i]);
+
+            if (IsVertexOnRight(worldPoint, lstart, lend))
+            {
+                Vector3 temp = worldPoint + offset;
+                Vector3 newWorldPoint = Quaternion.AngleAxis(angle, axis) * temp - offset;
+                newVertexs[i] = transform.InverseTransformPoint(newWorldPoint);
+            }
+            else
+            {
+                newVertexs[i] = orginVertexs[i];
+            }
+        }
+
+        mesh.vertices = newVertexs;
+        mesh.RecalculateNormals();
+
+ 
+    }
+
+    public Vector3 Point2LineVec(Vector3 targetPoint, Vector3 lstart, Vector3 lend)
+    {
+        Vector3 p = targetPoint - lstart;
+        Vector3 l = lend - lstart;
+
+        Vector3 projectVec = Vector3.Dot(p, l) * l.normalized + lstart;
+
+        Vector3 p2lineVec = p - projectVec;
+        return p2lineVec;
+    }
+
+
+    public bool IsVertexOnRight(Vector3 vertex, Vector3 lstart, Vector3 lend)
+    {
+        Vector3 point2LineVec = Point2LineVec(vertex, lstart, lend);
+        Vector3 lineVec = lend - lstart;
+        return Vector3.Cross(lineVec, point2LineVec).z > 0;
+    }
+}
